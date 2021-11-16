@@ -5,6 +5,7 @@ from app.db import get_db
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
+#signup route
 @bp.route('/users', methods=['POST'])
 def signup():
     data = request.get_json()
@@ -30,6 +31,7 @@ def signup():
     session['loggedIn'] = True
     return jsonify(id = newUser.id)
 
+#comment route
 @bp.route('/comments', methods=['POST'])
 def comment():
   data = request.get_json()
@@ -53,12 +55,37 @@ def comment():
   
   return jsonify(id = newComment.id)
 
+#upvote route
+@bp.route('/posts/upvote', methods=['PUT'])
+def upvote():
+  data = request.get_json()
+  db = get_db()
+
+  try:
+    # create a new vote with incoming id and session id
+    newVote = Vote(
+      post_id = data['post_id'],
+      user_id = session.get('user_id')
+    )
+
+    db.add(newVote)
+    db.commit()
+  except:
+    print(sys.exc_info()[0])
+
+    db.rollback()
+    return jsonify(message = 'Upvote failed'), 500
+
+  return '', 204
+
+#logout route
 @bp.route('/users/logout', methods=['POST'])
 def logout():
   # remove session variables
   session.clear()
   return '', 204
 
+#login route
 @bp.route('/users/login', methods=['POST'])
 def login():
   data = request.get_json()
